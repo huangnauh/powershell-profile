@@ -1,6 +1,7 @@
 function Get-Hash {
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true, ParameterSetName="String", Position = 0)]
+        [AllowEmptyString()]
         [System.String[]]
         $String,
 

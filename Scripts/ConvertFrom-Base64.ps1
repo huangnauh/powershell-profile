@@ -1,6 +1,7 @@
 function ConvertFrom-Base64 {
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true, ParameterSetName="InputObject", Position = 0)]
+        [AllowEmptyString()]
         [System.String[]]
         $InputObject,
 
