@@ -54,11 +54,6 @@ foreach ( $includeFile in ("Get-Hash", "ForEach-Parallel", "ConvertFrom-UnixDate
     . "$profileDir\Scripts\$includeFile.ps1"
 }
 
-# foreach ( $includeFile in ("Get-Handles", "Get-ProcessMiniDump", "Get-LimitChildItem", "Get-CRC32", "Get-Exports", "Get-SystemProcessInformation") ) {
-# 	# Unblock-File "$profileDir\Scripts\$includeFile.ps1"
-#     . "$profileDir\Scripts\PowerShell-Suite\$includeFile.ps1"
-# }
-
 
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
 
@@ -93,9 +88,6 @@ function ln($target, $link) {
 
 set-alias new-link ln
 
-# function ansible($name) {
-#     wsl bash -ic "cd /home/huangnauh/grimoire &&  ansible $name"
-# }
 function which($name) {
 	Get-Command $name | Select-Object -ExpandProperty Definition
 }
