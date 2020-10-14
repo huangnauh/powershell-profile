@@ -49,7 +49,7 @@ Set-PSReadLineKeyHandler -Key Alt+F -Function SelectShellForwardWord
 
 $profileDir = $PSScriptRoot;
 
-foreach ( $includeFile in ("Get-Hash", "ForEach-Parallel", "ConvertFrom-UnixDate", "ConvertTo-UnixDate") ) {
+foreach ( $includeFile in ("Get-Hash", "ForEach-Parallel", "ConvertFrom-UnixDate", "ConvertTo-UnixDate", "ConvertFrom-Base64", "ConvertTo-Base64") ) {
 	# Unblock-File "$profileDir\Scripts\$includeFile.ps1"
     . "$profileDir\Scripts\$includeFile.ps1"
 }
@@ -65,7 +65,7 @@ Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory
 Set-PsFzfOption -TabExpansion
 Set-Theme ys
 # Import-Module ZLocation
-Update-TypeData "$profileDir\My.Types.Ps1xml"
+# Update-TypeData "$profileDir\My.Types.Ps1xml"
 
 function GoBack { Set-Location .. }
 

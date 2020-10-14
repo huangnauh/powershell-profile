@@ -1,6 +1,6 @@
 function Get-Hash {
     param (
-        [Parameter(Mandatory, ParameterSetName="String", Position = 0)]
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, ParameterSetName="String", Position = 0)]
         [System.String[]]
         $String,
 
@@ -51,6 +51,6 @@ function Get-Hash {
         $obj = New-Object System.Text.UTF8Encoding
         [Byte[]] $computedHash = $Hasher.ComputeHash($obj.GetBytes($String))
         [string] $hash = [BitConverter]::ToString($computedHash) -replace '-',''
-        return $hash
+        $hash
     }
 }
