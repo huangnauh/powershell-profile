@@ -49,7 +49,7 @@ Set-PSReadLineKeyHandler -Key Alt+F -Function SelectShellForwardWord
 
 $profileDir = $PSScriptRoot;
 
-foreach ( $includeFile in ("Get-Hash", "ForEach-Parallel", "ConvertFrom-UnixDate", "ConvertTo-UnixDate", "ConvertFrom-Base64", "ConvertTo-Base64") ) {
+foreach ( $includeFile in ("Get-Hash", "New-RandomPassword", "ForEach-Parallel", "ConvertFrom-UnixDate", "ConvertTo-UnixDate", "ConvertFrom-Base64", "ConvertTo-Base64") ) {
 	# Unblock-File "$profileDir\Scripts\$includeFile.ps1"
     . "$profileDir\Scripts\$includeFile.ps1"
 }
