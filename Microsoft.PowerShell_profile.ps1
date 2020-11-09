@@ -6,6 +6,9 @@ $env:path +=  ";D:\software\Command"
 $Env:https_proxy = "http://127.0.0.1:7890"
 Import-Module oh-my-posh
 Import-Module PSReadLine
+Import-Module posh-git
+
+Invoke-Expression (&starship init powershell)
 
 # Set-PSReadLineOption -EditMode Emacs
 
@@ -58,13 +61,15 @@ foreach ( $includeFile in ("Get-Hash", "New-RandomPassword", "ForEach-Parallel",
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
 
 Set-PsFzfOption -TabExpansion
-Set-Theme ys
+# Set-PoshPrompt -Theme paradox
+
+# $GitPromptSettings.EnableFileStatus = $false;
 # Import-Module ZLocation
 # Update-TypeData "$profileDir\My.Types.Ps1xml"
 
 function GoBack { Set-Location .. }
 
-Set-Alias vi vim.bat
+Set-Alias vi vim
 Set-Alias open Invoke-Item
 Set-Alias .. GoBack
 
