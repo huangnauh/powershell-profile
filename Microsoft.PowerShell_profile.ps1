@@ -10,6 +10,11 @@ Import-Module posh-git
 
 Invoke-Expression (&starship init powershell)
 
+Invoke-Expression (& {
+    $hook = if ($PSVersionTable.PSVersion.Major -lt 6) { 'prompt' } else { 'pwd' }
+    (zoxide init --hook $hook powershell) -join "`n"
+})
+
 # Set-PSReadLineOption -EditMode Emacs
 
 # # In Emacs mode - Tab acts like in bash, but the Windows style completion
