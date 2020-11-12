@@ -7,13 +7,7 @@ $Env:https_proxy = "http://127.0.0.1:7890"
 Import-Module oh-my-posh
 Import-Module PSReadLine
 Import-Module posh-git
-
-Invoke-Expression (&starship init powershell)
-
-Invoke-Expression (& {
-    $hook = if ($PSVersionTable.PSVersion.Major -lt 6) { 'prompt' } else { 'pwd' }
-    (zoxide init --hook $hook powershell) -join "`n"
-})
+# Import-Module Terminal-Icons
 
 # Set-PSReadLineOption -EditMode Emacs
 
@@ -82,6 +76,22 @@ function Get-Path {
 	($Env:Path).Split(";")
 }
 
+Remove-Alias -Name ls
+function ls($target) {
+    Get-ChildItem $target | Format-Wide
+}
+
+Set-Alias ll Get-ChildItem
+
+Remove-Alias -Name cat
+function cat($target) {
+   bat -pp $target
+}
+
+function catl($target) {
+   bat --style=grid $target
+}
+
 function Get-Process-For-Port($port) {
 	Get-Process -Id (Get-NetTCPConnection -LocalPort $port).OwningProcess
 }
@@ -132,7 +142,8 @@ function global:$_() {
 
 # https://devblogs.microsoft.com/commandline/integrate-linux-commands-into-windows-with-powershell-and-the-windows-subsystem-for-linux/
 # The commands to import.
-$commands = "awk", "grep", "head", "less", "man", "sed", "seq", "upssh", "tail", "tmux"
+#$commands = "awk", "head", "man", "sed", "seq", "upssh", "tail", "tmux"
+$commands = "upssh", "tmux"
 
 # Register a function for each command.
 $commands | ForEach-Object { Invoke-Expression @"
@@ -271,3 +282,10 @@ function global:Format-WslArgument([string]$arg, [bool]$interactive) {
         return ($arg -replace " ", "\ ") -replace "([()|])", ('\$1', '`$1')[$interactive]
     }
 }
+
+Invoke-Expression (&starship init powershell)
+
+Invoke-Expression (& {
+    $hook = if ($PSVersionTable.PSVersion.Major -lt 6) { 'prompt' } else { 'pwd' }
+    (zoxide init --hook $hook powershell) -join "`n"
+})
