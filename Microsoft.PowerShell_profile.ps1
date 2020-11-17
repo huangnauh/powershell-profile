@@ -4,9 +4,9 @@
 $env:path +=  ";D:\software\SysinternalsSuite"
 $env:path +=  ";D:\software\Command"
 $Env:https_proxy = "http://127.0.0.1:7890"
-Import-Module oh-my-posh
+# Import-Module oh-my-posh
 Import-Module PSReadLine
-Import-Module posh-git
+# Import-Module posh-git
 # Import-Module Terminal-Icons
 
 # Set-PSReadLineOption -EditMode Emacs
@@ -282,6 +282,8 @@ function global:Format-WslArgument([string]$arg, [bool]$interactive) {
         return ($arg -replace " ", "\ ") -replace "([()|])", ('\$1', '`$1')[$interactive]
     }
 }
+
+$ENV:STARSHIP_CACHE = "${env:TEMP}\starship"
 
 Invoke-Expression (&starship init powershell)
 
