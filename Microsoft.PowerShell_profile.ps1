@@ -6,6 +6,7 @@ $env:path += ";D:\software\Command"
 $Env:https_proxy = "http://127.0.0.1:7890"
 # Import-Module oh-my-posh
 Import-Module PSReadLine
+Import-Module git-aliases -DisableNameChecking
 # Import-Module posh-git
 # Import-Module Terminal-Icons
 
