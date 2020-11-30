@@ -17,7 +17,7 @@ Import-Module git-aliases -DisableNameChecking
 # Set-PSReadLineKeyHandler -Key Ctrl+q -Function TabCompleteNext
 # Set-PSReadLineKeyHandler -Key Ctrl+Q -Function TabCompletePrevious
 
-# # Clipboard interaction is bound by default in Windows mode, but not Emacs mode.
+# Clipboard interaction is bound by default in Windows mode, but not Emacs mode.
 # Set-PSReadLineKeyHandler -Key Ctrl+C -Function Copy
 # Set-PSReadLineKeyHandler -Key Ctrl+v -Function Paste
 
@@ -36,6 +36,8 @@ Set-PSReadlineKeyHandler -Key Ctrl+Shift+q -Function TabCompletePrevious
 # movement is also very useful - these are the bindings you'd use if you
 # prefer the token based movements bound to the normal emacs word movement
 # key bindings.
+Set-PSReadLineKeyHandler -Key Ctrl+a -Function BeginningOfLine
+Set-PSReadLineKeyHandler -Key Ctrl+e -Function EndOfLine
 Set-PSReadLineKeyHandler -Key Alt+d -Function ShellKillWord
 Set-PSReadLineKeyHandler -Key Alt+Backspace -Function ShellBackwardKillWord
 Set-PSReadLineKeyHandler -Key Alt+b -Function ShellBackwardWord
@@ -44,6 +46,8 @@ Set-PSReadLineKeyHandler -Key Ctrl+j -Function SelectShellBackwardWord
 Set-PSReadLineKeyHandler -Key Ctrl+k -Function SelectShellForwardWord
 Set-PSReadLineKeyHandler -Key Alt+u -Function BackwardKillLine
 Set-PSReadLineKeyHandler -Key Alt+w -Function BackwardKillWord
+
+Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
 
 
 
@@ -64,6 +68,9 @@ foreach ( $includeFile in ("Get-Hash", "New-RandomPassword", "ForEach-Parallel",
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
 
 Set-PsFzfOption -TabExpansion
+Set-Alias cde Set-LocationFuzzyEverything
+Set-Alias fgst Invoke-FuzzyGitStatus
+
 # Set-PoshPrompt -Theme paradox
 
 # $GitPromptSettings.EnableFileStatus = $false;
@@ -82,7 +89,7 @@ function Get-Path {
 
 Remove-Alias -Name ls
 function ls($target) {
-    Get-ChildItem $target | Format-Wide
+    Get-ChildItem $target | Format-Wide Name -AutoSize
 }
 
 Set-Alias ll Get-ChildItem
@@ -107,7 +114,6 @@ function Get-Serial-Number {
     Get-CimInstance -ClassName Win32_Bios | select-object serialnumber
 }
 
-
 # From https://stackoverflow.com/questions/894430/creating-hard-and-soft-links-using-powershell
 function ln($target, $link) {
     New-Item -ItemType SymbolicLink -Path $link -Value $target
@@ -117,6 +123,16 @@ set-alias new-link ln
 
 function which($name) {
     Get-Command $name | Select-Object -ExpandProperty Definition
+}
+
+function Set-EnvProxy {
+    $proxy = 'http://127.0.0.1:7890'
+
+    $env:HTTPS_PROXY = $proxy
+}
+
+function Clear-EnvProxy {
+    Remove-Item env:HTTPS_PROXY
 }
 
 function ssh-proxy {
@@ -299,5 +315,6 @@ Invoke-Expression (& {
         (zoxide init --hook $hook powershell) -join "`n"
     })
 
+(& rustup completions powershell) | Out-String | Invoke-Expression
 Invoke-Expression (@(gh completion -s powershell) -replace " ''\)$", " ' ')" -join "`n")
 Invoke-Expression (@(kaf completion powershell) -replace " ''\)$", " ' ')" -join "`n")
