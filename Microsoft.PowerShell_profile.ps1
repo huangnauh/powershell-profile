@@ -128,13 +128,17 @@ function which($name) {
     Get-Command $name | Select-Object -ExpandProperty Definition
 }
 
-function Set-EnvProxy {
+function Set-Proxy {
     $proxy = 'http://127.0.0.1:7890'
 
     $env:HTTPS_PROXY = $proxy
 }
 
-function Clear-EnvProxy {
+function Get-Proxy {
+    $env:HTTPS_PROXY
+}
+
+function Clear-Proxy {
     Remove-Item env:HTTPS_PROXY
 }
 
