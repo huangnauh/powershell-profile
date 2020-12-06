@@ -1,4 +1,4 @@
-function New-RandomPassword {
+function New-Password {
     param(
         [Parameter(ParameterSetName="Length", Position = 0)]
         [int]$Length=8,

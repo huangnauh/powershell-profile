@@ -29,7 +29,6 @@ Set-PSReadlineKeyHandler -Key DownArrow -Function HistorySearchForward
 Set-PSReadLineOption -HistorySearchCursorMovesToEnd 
 # Change how powershell does tab completion
 # http://stackoverflow.com/questions/39221953/can-i-make-powershell-tab-complete-show-me-all-options-rather-than-picking-a-sp
-Set-PSReadlineKeyHandler -Chord Tab -Function MenuComplete
 Set-PSReadlineKeyHandler -Key Ctrl+q -Function TabCompleteNext
 Set-PSReadlineKeyHandler -Key Ctrl+Shift+q -Function TabCompletePrevious
 # The built-in word movement uses character delimiters, but token based word
@@ -47,8 +46,11 @@ Set-PSReadLineKeyHandler -Key Ctrl+k -Function SelectShellForwardWord
 Set-PSReadLineKeyHandler -Key Alt+u -Function BackwardKillLine
 Set-PSReadLineKeyHandler -Key Alt+w -Function BackwardKillWord
 
-Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
-
+Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+#Set-PSReadLineKeyHandler -Chord Tab -ScriptBlock { Invoke-FzfTabCompletion }
+Set-PSReadlineKeyHandler -Chord "Ctrl+y" -ScriptBlock { Invoke-FuzzyHistory } 
+Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
+Set-PsFzfOption -TabExpansion
 
 
 # # From https://serverfault.com/questions/95431/in-a-powershell-script-how-can-i-check-if-im-running-with-administrator-privil#97599
@@ -59,15 +61,11 @@ Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
 
 $profileDir = $PSScriptRoot;
 
-foreach ( $includeFile in ("Get-Hash", "New-RandomPassword", "ForEach-Parallel", "ConvertFrom-UnixDate", "ConvertTo-UnixDate", "ConvertFrom-Base64", "ConvertTo-Base64") ) {
+foreach ( $includeFile in ("Get-Hash", "New-Password", "ForEach-Parallel", "ConvertFrom-UnixDate", "ConvertTo-UnixDate", "ConvertFrom-Base64", "ConvertTo-Base64") ) {
     # Unblock-File "$profileDir\Scripts\$includeFile.ps1"
     . "$profileDir\Scripts\$includeFile.ps1"
 }
 
-
-Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
-
-Set-PsFzfOption -TabExpansion
 Set-Alias cde Set-LocationFuzzyEverything
 Set-Alias fgst Invoke-FuzzyGitStatus
 
@@ -93,6 +91,7 @@ function ls($target) {
 }
 
 Set-Alias ll Get-ChildItem
+Set-Alias l Get-ChildItem
 
 Set-Alias ctud  ConvertTo-UnixDate
 Set-Alias cfud  ConvertFrom-UnixDate
@@ -112,6 +111,10 @@ function Get-Process-For-Port($port) {
 
 function Get-Serial-Number {
     Get-CimInstance -ClassName Win32_Bios | select-object serialnumber
+}
+
+function New-UUID {
+    [guid]::NewGuid().ToString()
 }
 
 # From https://stackoverflow.com/questions/894430/creating-hard-and-soft-links-using-powershell
@@ -134,6 +137,38 @@ function Set-EnvProxy {
 function Clear-EnvProxy {
     Remove-Item env:HTTPS_PROXY
 }
+
+function tr {
+    if ($args.Length -eq 0 ) {
+        Write-Output 'this is a cli translator, try `fy hello world`.'
+    } else {
+        $query = ""
+        for ($i = 0; $i -lt $args.Count; $i++) {
+            $query += " "
+            $query += $args[$i]
+        }
+
+        $ApiUrl = "http://fanyi.youdao.com/openapi.do?keyfrom=CapsLock&key=12763084&type=data&doctype=json&version=1.1&q={0}" -f $query
+
+        $info = (Invoke-WebRequest $ApiUrl).Content | ConvertFrom-Json
+
+        Write-Host "@" $query  "[" $info.basic.phonetic "]"
+        Write-Host "翻译：`t" $info.translation
+        Write-Host "词典："
+        for ($i = 0; $i -lt $info.basic.explains.Count; $i++) {
+            Write-Host "`t" $info.basic.explains[$i]
+        }
+        Write-Host "网络："
+        for ($i = 0; $i -lt $info.web.Count; $i++) {
+            Write-Host "`t" $info.web[$i].key ": " -NoNewline
+            for ($j = 0; $j -lt $info.web[$i].value.Count; $j++) {
+                Write-Host $info.web[$i].value[$j] "; " -NoNewline
+            }
+            Write-Host ""
+        }
+    }
+}
+
 
 function ssh-proxy {
     ssh -o ProxyCommand="connect.exe -S 127.0.0.1:7890 %h %p" $args
@@ -316,5 +351,6 @@ Invoke-Expression (& {
     })
 
 (& rustup completions powershell) | Out-String | Invoke-Expression
+(& kaf completion powershell) | Out-String | Invoke-Expression
 Invoke-Expression (@(gh completion -s powershell) -replace " ''\)$", " ' ')" -join "`n")
-Invoke-Expression (@(kaf completion powershell) -replace " ''\)$", " ' ')" -join "`n")
+#Invoke-Expression (@(kaf completion powershell) -replace " ''\)$", " ' ')" -join "`n")
