@@ -1,12 +1,14 @@
-
 # vscode
-# Add-PathVariable "${env:LOCALAPPDATA}\Programs\Microsoft VS Code\bin" 
+# Add-PathVariable "${env:LOCALAPPDATA}\Programs\Microsoft VS Code\bin"
 $env:path += ";D:\software\SysinternalsSuite"
 $env:path += ";D:\software\Command"
-$Env:https_proxy = "http://127.0.0.1:7890"
+$env:IPFS_PATH = "D:\software\ipfs"
+#$env:COLI_CONFIG = "D:\software"
+$env:COLI_CACHE = "D:\software\cache"
+$env:https_proxy = "http://127.0.0.1:7890"
+$env:STARSHIP_CACHE = "${env:TEMP}\starship"
 # Import-Module oh-my-posh
 Import-Module PSReadLine
-Import-Module git-aliases -DisableNameChecking
 # Import-Module posh-git
 # Import-Module Terminal-Icons
 
@@ -26,7 +28,7 @@ Import-Module git-aliases -DisableNameChecking
 Set-PSReadLineOption -MaximumHistoryCount 20000
 Set-PSReadlineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadlineKeyHandler -Key DownArrow -Function HistorySearchForward
-Set-PSReadLineOption -HistorySearchCursorMovesToEnd 
+Set-PSReadLineOption -HistorySearchCursorMovesToEnd
 # Change how powershell does tab completion
 # http://stackoverflow.com/questions/39221953/can-i-make-powershell-tab-complete-show-me-all-options-rather-than-picking-a-sp
 Set-PSReadlineKeyHandler -Key Ctrl+q -Function TabCompleteNext
@@ -35,6 +37,7 @@ Set-PSReadlineKeyHandler -Key Ctrl+Shift+q -Function TabCompletePrevious
 # movement is also very useful - these are the bindings you'd use if you
 # prefer the token based movements bound to the normal emacs word movement
 # key bindings.
+Set-PSReadLineKeyHandler -Key Ctrl+y -Function Redo
 Set-PSReadLineKeyHandler -Key Ctrl+a -Function BeginningOfLine
 Set-PSReadLineKeyHandler -Key Ctrl+e -Function EndOfLine
 Set-PSReadLineKeyHandler -Key Alt+d -Function ShellKillWord
@@ -48,23 +51,46 @@ Set-PSReadLineKeyHandler -Key Alt+w -Function BackwardKillWord
 
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 #Set-PSReadLineKeyHandler -Chord Tab -ScriptBlock { Invoke-FzfTabCompletion }
-Set-PSReadlineKeyHandler -Chord "Ctrl+y" -ScriptBlock { Invoke-FuzzyHistory } 
+#Set-PSReadlineKeyHandler -Chord "Ctrl+y" -ScriptBlock { Invoke-FuzzyHistory }
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
 Set-PsFzfOption -TabExpansion
 
 
-# # From https://serverfault.com/questions/95431/in-a-powershell-script-how-can-i-check-if-im-running-with-administrator-privil#97599
-# function Test-Administrator  {  
-# 	$user = [Security.Principal.WindowsIdentity]::GetCurrent();
-# 	(New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)  
-# }
+# From https://serverfault.com/questions/95431/in-a-powershell-script-how-can-i-check-if-im-running-with-administrator-privil#97599
+function Test-Administrator  {
+	$user = [Security.Principal.WindowsIdentity]::GetCurrent();
+ 	(New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
+}
 
 $profileDir = $PSScriptRoot;
+$Scripts = ("Get-Hash", "New-Password", "ForEach-Parallel",
+    "ConvertFrom-UnixDate", "ConvertTo-UnixDate", "ConvertFrom-Base64", "ConvertTo-Base64",
+    "_lsd"
+)
 
-foreach ( $includeFile in ("Get-Hash", "New-Password", "ForEach-Parallel", "ConvertFrom-UnixDate", "ConvertTo-UnixDate", "ConvertFrom-Base64", "ConvertTo-Base64") ) {
+foreach ( $includeFile in $Scripts) {
     # Unblock-File "$profileDir\Scripts\$includeFile.ps1"
     . "$profileDir\Scripts\$includeFile.ps1"
 }
+
+Invoke-Expression (&starship init powershell)
+Invoke-Expression (& {
+        (zoxide init --hook pwd powershell) -join "`n"
+    })
+
+(& rustup completions powershell) | Out-String | Invoke-Expression
+(& kaf completion powershell) | Out-String | Invoke-Expression
+(& coli completion powershell) | Out-String | Invoke-Expression
+Invoke-Expression (@(gh completion -s powershell) -replace " ''\)$", " ' ')" -join "`n")
+
+$promptScript = (Get-Item function:prompt).ScriptBlock
+function Prompt {
+    $path = Get-Location
+    $host.ui.RawUI.WindowTitle = $path
+    & $promptScript
+}
+
+Import-Module git-aliases -DisableNameChecking
 
 Set-Alias cde Set-LocationFuzzyEverything
 Set-Alias fgst Invoke-FuzzyGitStatus
@@ -77,7 +103,7 @@ Set-Alias fgst Invoke-FuzzyGitStatus
 
 function GoBack { Set-Location .. }
 
-Set-Alias vi vim
+Set-Alias vi nvim
 Set-Alias open Invoke-Item
 Set-Alias .. GoBack
 
@@ -193,7 +219,7 @@ function global:$_() {
     for (`$i = 0; `$i -lt `$args.Count; `$i++) {
         if (`$args[`$i].StartsWith('-')) {
             `$i++
-        } 
+        }
         `$args[`$i] = `"'`" + `$args[`$i] +  `"'`"
     }
     Write-Output "cd /home/huangnauh/grimoire && $_ `$args"
@@ -214,10 +240,10 @@ function global:$_() {
     for (`$i = 0; `$i -lt `$args.Count; `$i++) {
         if (`$args[`$i].StartsWith('-')) {
             `$i++
-        } 
+        }
         if (`$i -ge `$args.Count) {
             break
-        }  
+        }
         # If a path is absolute with a qualifier (e.g. C:), run it through wslpath to map it to the appropriate mount point.
         if (Split-Path `$args[`$i] -IsAbsolute -ErrorAction Ignore) {
             `$args[`$i] = Format-WslArgument (wsl.exe bash -ic "wslpath '`$(`$args[`$i])'")
@@ -344,17 +370,3 @@ function global:Format-WslArgument([string]$arg, [bool]$interactive) {
         return ($arg -replace " ", "\ ") -replace "([()|])", ('\$1', '`$1')[$interactive]
     }
 }
-
-$ENV:STARSHIP_CACHE = "${env:TEMP}\starship"
-
-Invoke-Expression (&starship init powershell)
-
-Invoke-Expression (& {
-        $hook = if ($PSVersionTable.PSVersion.Major -lt 6) { 'prompt' } else { 'pwd' }
-        (zoxide init --hook $hook powershell) -join "`n"
-    })
-
-(& rustup completions powershell) | Out-String | Invoke-Expression
-(& kaf completion powershell) | Out-String | Invoke-Expression
-Invoke-Expression (@(gh completion -s powershell) -replace " ''\)$", " ' ')" -join "`n")
-#Invoke-Expression (@(kaf completion powershell) -replace " ''\)$", " ' ')" -join "`n")
