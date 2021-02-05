@@ -1,9 +1,7 @@
 # vscode
 # Add-PathVariable "${env:LOCALAPPDATA}\Programs\Microsoft VS Code\bin"
-$env:path += ";D:\software\SysinternalsSuite"
-$env:path += ";D:\software\Command"
+#$env:path += ";D:\software\Command"
 $env:IPFS_PATH = "D:\software\ipfs"
-#$env:COLI_CONFIG = "D:\software"
 $env:COLI_CACHE = "D:\software\cache"
 $env:https_proxy = "http://127.0.0.1:7890"
 $env:STARSHIP_CACHE = "${env:TEMP}\starship"
@@ -81,7 +79,18 @@ Invoke-Expression (& {
 (& rustup completions powershell) | Out-String | Invoke-Expression
 (& kaf completion powershell) | Out-String | Invoke-Expression
 (& coli completion powershell) | Out-String | Invoke-Expression
+(& chezmoi completion powershell) | Out-String | Invoke-Expression
 Invoke-Expression (@(gh completion -s powershell) -replace " ''\)$", " ' ')" -join "`n")
+
+Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    [Console]::InputEncoding = [Console]::OutputEncoding = $OutputEncoding = [System.Text.Utf8Encoding]::new()
+    $Local:word = $wordToComplete.Replace('"', '""')
+    $Local:ast = $commandAst.ToString().Replace('"', '""')
+    winget complete --word="$Local:word" --commandline "$Local:ast" --position $cursorPosition | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}
 
 $promptScript = (Get-Item function:prompt).ScriptBlock
 function Prompt {
@@ -231,7 +240,7 @@ function global:$_() {
 # https://devblogs.microsoft.com/commandline/integrate-linux-commands-into-windows-with-powershell-and-the-windows-subsystem-for-linux/
 # The commands to import.
 #$commands = "awk", "head", "man", "sed", "seq", "upssh", "tail", "tmux"
-$commands = "upssh", "tmux"
+$commands = "tmux"
 
 # Register a function for each command.
 $commands | ForEach-Object { Invoke-Expression @"
