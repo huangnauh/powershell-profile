@@ -22,7 +22,7 @@
     #>
     Param(
         [int]$Date,
-        [bool]$Utc = $true
+        [switch]$Utc
     )
 
     # Adapted from http://stackoverflow.com/questions/10781697/convert-unix-time-with-powershell

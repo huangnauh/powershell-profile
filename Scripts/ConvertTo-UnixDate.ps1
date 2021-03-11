@@ -20,12 +20,12 @@
     #>
     Param(
         [datetime]$Date = (Get-Date),
-        [bool]$Utc = $true
+        [switch]$Utc
     )
 
     #Borrowed from the internet, presumably.
 
-    if($utc)
+    if (-not $utc)
     {
         $Date = $Date.ToUniversalTime()
     }

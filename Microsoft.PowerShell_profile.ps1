@@ -60,6 +60,14 @@ function Test-Administrator  {
  	(New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
 }
 
+function scoop {
+    if ($args[0] -eq "search") {
+        scoop-search.exe @($args | Select-Object -Skip 1)
+    } else {
+        scoop.ps1 @args
+    }
+}
+
 $profileDir = $PSScriptRoot;
 $Scripts = ("Get-Hash", "New-Password", "ForEach-Parallel",
     "ConvertFrom-UnixDate", "ConvertTo-UnixDate", "ConvertFrom-Base64", "ConvertTo-Base64",
