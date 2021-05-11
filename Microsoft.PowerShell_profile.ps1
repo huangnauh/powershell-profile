@@ -3,7 +3,8 @@
 #$env:path += ";D:\software\Command"
 $env:IPFS_PATH = "D:\software\ipfs"
 $env:COLI_CACHE = "D:\software\cache"
-$env:https_proxy = "http://127.0.0.1:7890"
+$env:YARR_OPENBROWSER = $True
+#$env:https_proxy = "http://127.0.0.1:7890"
 $env:STARSHIP_CACHE = "${env:TEMP}\starship"
 # Import-Module oh-my-posh
 Import-Module PSReadLine
@@ -69,7 +70,7 @@ function scoop {
 }
 
 $profileDir = $PSScriptRoot;
-$Scripts = ("Get-Hash", "New-Password", "ForEach-Parallel",
+$Scripts = ("Get-Hash", "ForEach-Parallel",
     "ConvertFrom-UnixDate", "ConvertTo-UnixDate", "ConvertFrom-Base64", "ConvertTo-Base64",
     "_lsd"
 )
@@ -85,10 +86,11 @@ Invoke-Expression (& {
     })
 
 (& rustup completions powershell) | Out-String | Invoke-Expression
-(& kaf completion powershell) | Out-String | Invoke-Expression
-(& coli completion powershell) | Out-String | Invoke-Expression
-(& chezmoi completion powershell) | Out-String | Invoke-Expression
-Invoke-Expression (@(gh completion -s powershell) -replace " ''\)$", " ' ')" -join "`n")
+# (& kaf completion powershell) | Out-String | Invoke-Expression
+# (& coli completion powershell) | Out-String | Invoke-Expression
+# (& chezmoi completion powershell) | Out-String | Invoke-Expression
+#(& gh completion -s powershell) | Out-String | Invoke-Expression
+# Invoke-Expression (@(gh completion -s powershell) -replace " ''\)$", " ' ')" -join "`n")
 
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
@@ -128,7 +130,7 @@ function Get-Path {
     ($Env:Path).Split(";")
 }
 
-Remove-Alias -Name ls
+# Remove-Alias -Name ls
 function ls($target) {
     Get-ChildItem $target | Format-Wide Name -AutoSize
 }
@@ -139,7 +141,7 @@ Set-Alias l Get-ChildItem
 Set-Alias ctud  ConvertTo-UnixDate
 Set-Alias cfud  ConvertFrom-UnixDate
 
-Remove-Alias -Name cat
+# Remove-Alias -Name cat
 function cat($target) {
     bat -pp $target
 }
@@ -230,7 +232,8 @@ function reboot {
 }
 
 
-$grimoire = "ansible", "ansible-playbook"
+# $grimoire = "ansible", "ansible-playbook"
+$grimoire = @()
 $grimoire | ForEach-Object { Invoke-Expression @"
 function global:$_() {
     for (`$i = 0; `$i -lt `$args.Count; `$i++) {
@@ -248,7 +251,7 @@ function global:$_() {
 # https://devblogs.microsoft.com/commandline/integrate-linux-commands-into-windows-with-powershell-and-the-windows-subsystem-for-linux/
 # The commands to import.
 #$commands = "awk", "head", "man", "sed", "seq", "upssh", "tail", "tmux"
-$commands = "tmux"
+$commands = @()
 
 # Register a function for each command.
 $commands | ForEach-Object { Invoke-Expression @"
@@ -283,101 +286,101 @@ function global:$_() {
 }
 
 # Register an ArgumentCompleter that shims bash's programmable completion.
-Register-ArgumentCompleter -CommandName $commands -ScriptBlock {
-    param($wordToComplete, $commandAst, $cursorPosition)
+# Register-ArgumentCompleter -CommandName $commands -ScriptBlock {
+#     param($wordToComplete, $commandAst, $cursorPosition)
 
-    # Map the command to the appropriate bash completion function.
-    $F = switch ($commandAst.CommandElements[0].Value) {
-        { $_ -in "awk", "grep", "head", "less", "ls", "sed", "seq", "tail" } {
-            "_longopt"
-            break
-        }
+#     # Map the command to the appropriate bash completion function.
+#     $F = switch ($commandAst.CommandElements[0].Value) {
+#         { $_ -in "awk", "grep", "head", "less", "ls", "sed", "seq", "tail" } {
+#             "_longopt"
+#             break
+#         }
 
-        "man" {
-            "_man"
-            break
-        }
+#         "man" {
+#             "_man"
+#             break
+#         }
 
-        "upssh" {
-            "_upssh"
-            break
-        }
+#         "upssh" {
+#             "_upssh"
+#             break
+#         }
 
-        Default {
-            "_minimal"
-            break
-        }
-    }
+#         Default {
+#             "_minimal"
+#             break
+#         }
+#     }
 
-    # Populate bash programmable completion variables.
-    $COMP_LINE = "`"$commandAst`""
-    $COMP_WORDS = "('$($commandAst.CommandElements.Extent.Text -join "' '")')" -replace "''", "'"
-    for ($i = 1; $i -lt $commandAst.CommandElements.Count; $i++) {
-        $extent = $commandAst.CommandElements[$i].Extent
-        if ($cursorPosition -lt $extent.EndColumnNumber) {
-            # The cursor is in the middle of a word to complete.
-            $previousWord = $commandAst.CommandElements[$i - 1].Extent.Text
-            $COMP_CWORD = $i
-            break
-        } elseif ($cursorPosition -eq $extent.EndColumnNumber) {
-            # The cursor is immediately after the current word.
-            $previousWord = $extent.Text
-            $COMP_CWORD = $i + 1
-            break
-        } elseif ($cursorPosition -lt $extent.StartColumnNumber) {
-            # The cursor is within whitespace between the previous and current words.
-            $previousWord = $commandAst.CommandElements[$i - 1].Extent.Text
-            $COMP_CWORD = $i
-            break
-        } elseif ($i -eq $commandAst.CommandElements.Count - 1 -and $cursorPosition -gt $extent.EndColumnNumber) {
-            # The cursor is within whitespace at the end of the line.
-            $previousWord = $extent.Text
-            $COMP_CWORD = $i + 1
-            break
-        }
-    }
+#     # Populate bash programmable completion variables.
+#     $COMP_LINE = "`"$commandAst`""
+#     $COMP_WORDS = "('$($commandAst.CommandElements.Extent.Text -join "' '")')" -replace "''", "'"
+#     for ($i = 1; $i -lt $commandAst.CommandElements.Count; $i++) {
+#         $extent = $commandAst.CommandElements[$i].Extent
+#         if ($cursorPosition -lt $extent.EndColumnNumber) {
+#             # The cursor is in the middle of a word to complete.
+#             $previousWord = $commandAst.CommandElements[$i - 1].Extent.Text
+#             $COMP_CWORD = $i
+#             break
+#         } elseif ($cursorPosition -eq $extent.EndColumnNumber) {
+#             # The cursor is immediately after the current word.
+#             $previousWord = $extent.Text
+#             $COMP_CWORD = $i + 1
+#             break
+#         } elseif ($cursorPosition -lt $extent.StartColumnNumber) {
+#             # The cursor is within whitespace between the previous and current words.
+#             $previousWord = $commandAst.CommandElements[$i - 1].Extent.Text
+#             $COMP_CWORD = $i
+#             break
+#         } elseif ($i -eq $commandAst.CommandElements.Count - 1 -and $cursorPosition -gt $extent.EndColumnNumber) {
+#             # The cursor is within whitespace at the end of the line.
+#             $previousWord = $extent.Text
+#             $COMP_CWORD = $i + 1
+#             break
+#         }
+#     }
 
-    # Repopulate bash programmable completion variables for scenarios like '/mnt/c/Program Files'/<TAB> where <TAB> should continue completing the quoted path.
-    $currentExtent = $commandAst.CommandElements[$COMP_CWORD].Extent
-    $previousExtent = $commandAst.CommandElements[$COMP_CWORD - 1].Extent
-    if ($currentExtent.Text -like "/*" -and $currentExtent.StartColumnNumber -eq $previousExtent.EndColumnNumber) {
-        $COMP_LINE = $COMP_LINE -replace "$($previousExtent.Text)$($currentExtent.Text)", $wordToComplete
-        $COMP_WORDS = $COMP_WORDS -replace "$($previousExtent.Text) '$($currentExtent.Text)'", $wordToComplete
-        $previousWord = $commandAst.CommandElements[$COMP_CWORD - 2].Extent.Text
-        $COMP_CWORD -= 1
-    }
+#     # Repopulate bash programmable completion variables for scenarios like '/mnt/c/Program Files'/<TAB> where <TAB> should continue completing the quoted path.
+#     $currentExtent = $commandAst.CommandElements[$COMP_CWORD].Extent
+#     $previousExtent = $commandAst.CommandElements[$COMP_CWORD - 1].Extent
+#     if ($currentExtent.Text -like "/*" -and $currentExtent.StartColumnNumber -eq $previousExtent.EndColumnNumber) {
+#         $COMP_LINE = $COMP_LINE -replace "$($previousExtent.Text)$($currentExtent.Text)", $wordToComplete
+#         $COMP_WORDS = $COMP_WORDS -replace "$($previousExtent.Text) '$($currentExtent.Text)'", $wordToComplete
+#         $previousWord = $commandAst.CommandElements[$COMP_CWORD - 2].Extent.Text
+#         $COMP_CWORD -= 1
+#     }
 
-    # Build the command to pass to WSL.
-    $command = $commandAst.CommandElements[0].Value
-    $bashCompletion = ". /usr/share/bash-completion/bash_completion 2> /dev/null"
-    $commandCompletion = ". /usr/share/bash-completion/completions/$command 2> /dev/null"
-    $COMPINPUT = "COMP_LINE=$COMP_LINE; COMP_WORDS=$COMP_WORDS; COMP_CWORD=$COMP_CWORD; COMP_POINT=$cursorPosition"
-    $COMPGEN = "bind `"set completion-ignore-case on`" 2> /dev/null; $F `"$command`" `"$wordToComplete`" `"$previousWord`" 2> /dev/null"
-    $COMPREPLY = "IFS=`$'\n'; echo `"`${COMPREPLY[*]}`""
-    $commandLine = "$bashCompletion; $commandCompletion; $COMPINPUT; $COMPGEN; $COMPREPLY" -split ' '
+#     # Build the command to pass to WSL.
+#     $command = $commandAst.CommandElements[0].Value
+#     $bashCompletion = ". /usr/share/bash-completion/bash_completion 2> /dev/null"
+#     $commandCompletion = ". /usr/share/bash-completion/completions/$command 2> /dev/null"
+#     $COMPINPUT = "COMP_LINE=$COMP_LINE; COMP_WORDS=$COMP_WORDS; COMP_CWORD=$COMP_CWORD; COMP_POINT=$cursorPosition"
+#     $COMPGEN = "bind `"set completion-ignore-case on`" 2> /dev/null; $F `"$command`" `"$wordToComplete`" `"$previousWord`" 2> /dev/null"
+#     $COMPREPLY = "IFS=`$'\n'; echo `"`${COMPREPLY[*]}`""
+#     $commandLine = "$bashCompletion; $commandCompletion; $COMPINPUT; $COMPGEN; $COMPREPLY" -split ' '
 
-    # Invoke bash completion and return CompletionResults.
-    $previousCompletionText = ""
-    (wsl.exe $commandLine) -split '\n' |
-    Sort-Object -Unique -CaseSensitive |
-    ForEach-Object {
-        if ($wordToComplete -match "(.*=).*") {
-            $completionText = Format-WslArgument ($Matches[1] + $_) $true
-            $listItemText = $_
-        } else {
-            $completionText = Format-WslArgument $_ $true
-            $listItemText = $completionText
-        }
+#     # Invoke bash completion and return CompletionResults.
+#     $previousCompletionText = ""
+#     (wsl.exe $commandLine) -split '\n' |
+#     Sort-Object -Unique -CaseSensitive |
+#     ForEach-Object {
+#         if ($wordToComplete -match "(.*=).*") {
+#             $completionText = Format-WslArgument ($Matches[1] + $_) $true
+#             $listItemText = $_
+#         } else {
+#             $completionText = Format-WslArgument $_ $true
+#             $listItemText = $completionText
+#         }
 
-        if ($completionText -eq $previousCompletionText) {
-            # Differentiate completions that differ only by case otherwise PowerShell will view them as duplicate.
-            $listItemText += ' '
-        }
+#         if ($completionText -eq $previousCompletionText) {
+#             # Differentiate completions that differ only by case otherwise PowerShell will view them as duplicate.
+#             $listItemText += ' '
+#         }
 
-        $previousCompletionText = $completionText
-        [System.Management.Automation.CompletionResult]::new($completionText, $listItemText, 'ParameterName', $completionText)
-    }
-}
+#         $previousCompletionText = $completionText
+#         [System.Management.Automation.CompletionResult]::new($completionText, $listItemText, 'ParameterName', $completionText)
+#     }
+# }
 
 # Helper function to escape characters in arguments passed to WSL that would otherwise be misinterpreted.
 function global:Format-WslArgument([string]$arg, [bool]$interactive) {
@@ -387,3 +390,113 @@ function global:Format-WslArgument([string]$arg, [bool]$interactive) {
         return ($arg -replace " ", "\ ") -replace "([()|])", ('\$1', '`$1')[$interactive]
     }
 }
+
+    # Smart Quotes Insert/Delete
+    # The next four key handlers are designed to make entering matched quotes
+    # parens, and braces a nicer experience.  I'd like to include functions
+    # in the module that do this, but this implementation still isn't as smart
+    # as ReSharper, so I'm just providing it as a sample.
+    # Set-PSReadLineKeyHandler -Key '"',"'" `
+    #     -BriefDescription SmartInsertQuote `
+    #     -LongDescription "Insert paired quotes if not already on a quote" `
+    #     -ScriptBlock {
+    #     param($key, $arg)
+
+    #     $quote = $key.KeyChar
+
+    #     $selectionStart = $null
+    #     $selectionLength = $null
+    #     [Microsoft.PowerShell.PSConsoleReadLine]::GetSelectionState(`
+    #         [ref]$selectionStart, [ref]$selectionLength)
+
+    #     $line = $null
+    #     $cursor = $null
+    #     [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState(`
+    #         [ref]$line, [ref]$cursor)
+
+    #     # If text is selected, just quote it without any smarts
+    #     if ($selectionStart -ne -1) {
+    #         [Microsoft.PowerShell.PSConsoleReadLine]::Replace(`
+    #             $selectionStart, $selectionLength, $quote +
+    #             $line.SubString($selectionStart, $selectionLength) + $quote)
+    #         [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition(`
+    #             $selectionStart + $selectionLength + 2)
+    #         return
+    #     }
+
+    #     $ast = $null
+    #     $tokens = $null
+    #     $parseErrors = $null
+    #     [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState(`
+    #         [ref]$ast, [ref]$tokens, [ref]$parseErrors, [ref]$null)
+
+    #     function FindToken {
+    #         param($tokens, $cursor)
+
+    #         foreach ($token in $tokens) {
+    #             if ($cursor -lt $token.Extent.StartOffset) { continue }
+    #             if ($cursor -lt $token.Extent.EndOffset) {
+    #                 $result = $token
+    #                 $token = $token -as [System.Management.Automation.Language.StringExpandableToken]
+    #                 if ($token) {
+    #                     $nested = FindToken $token.NestedTokens $cursor
+    #                     if ($nested) { $result = $nested }
+    #                 }
+
+    #                 return $result
+    #             }
+    #         }
+    #         return $null
+    #     }
+
+    #     $token = FindToken $tokens $cursor
+
+    #     # If we're on or inside a **quoted** string token (so not generic), we need to be smarter
+    #     if ($token -is [System.Management.Automation.Language.StringToken] -and
+    #         $token.Kind -ne [System.Management.Automation.Language.TokenKind]::Generic) {
+    #         # If we're at the start of the string, assume we're inserting a new string
+    #         if ($token.Extent.StartOffset -eq $cursor) {
+    #             [Microsoft.PowerShell.PSConsoleReadLine]::Insert("$quote$quote ")
+    #             [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition($cursor + 1)
+    #             return
+    #         }
+
+    #         # If we're at the end of the string, move over the closing quote if present.
+    #         if ($token.Extent.EndOffset -eq ($cursor + 1) -and $line[$cursor] -eq $quote) {
+    #             [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition($cursor + 1)
+    #             return
+    #         }
+    #     }
+
+    #     if ($null -eq $token -or
+    #         $token.Kind -eq [System.Management.Automation.Language.TokenKind]::RParen -or
+    #         $token.Kind -eq [System.Management.Automation.Language.TokenKind]::RCurly -or
+    #         $token.Kind -eq [System.Management.Automation.Language.TokenKind]::RBracket) {
+    #         if ($line[0..$cursor].Where{$_ -eq $quote}.Count % 2 -eq 1) {
+    #             # Odd number of quotes before the cursor, insert a single quote
+    #             [Microsoft.PowerShell.PSConsoleReadLine]::Insert($quote)
+    #         } else {
+    #             # Insert matching quotes, move cursor to be in between the quotes
+    #             [Microsoft.PowerShell.PSConsoleReadLine]::Insert("$quote$quote")
+    #             [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition($cursor + 1)
+    #         }
+    #         return
+    #     }
+
+    #     if ($token.Extent.StartOffset -eq $cursor) {
+    #         if ($token.Kind -eq [System.Management.Automation.Language.TokenKind]::Generic -or
+    #             $token.Kind -eq [System.Management.Automation.Language.TokenKind]::Identifier -or
+    #             $token.Kind -eq [System.Management.Automation.Language.TokenKind]::Variable -or
+    #             $token.TokenFlags.hasFlag([TokenFlags]::Keyword)) {
+    #             $end = $token.Extent.EndOffset
+    #             $len = $end - $cursor
+    #             [Microsoft.PowerShell.PSConsoleReadLine]::Replace($cursor, $len, $quote +
+    #                 $line.SubString($cursor, $len) + $quote)
+    #             [Microsoft.PowerShell.PSConsoleReadLine]::SetCursorPosition($end + 2)
+    #             return
+    #         }
+    #     }
+
+    #     # We failed to be smart, so just insert a single quote
+    #     [Microsoft.PowerShell.PSConsoleReadLine]::Insert($quote)
+    # }
